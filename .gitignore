@@ -7,3 +7,4 @@ __pycache__/
 selenium_tests/
 debug.log
 ffmpeg.exe
+videos/

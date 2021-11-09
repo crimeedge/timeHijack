@@ -42,7 +42,7 @@ def main():
         # print(video_id)
         id = video_id
         ms_pair = None
-        if id in cached_dict and "tim" in cached_dict[id] and cached_dict[id]["tim"]:
+        if id in cached_dict and "tim" in cached_dict[id] and len(cached_dict[id]["tim"])>0:
             ms_pair = get_time_from_comment(cached_dict[id]["tim"][0])
             print("cached stuff yea")
         if not ms_pair:
