@@ -9,6 +9,7 @@ def download_one_vid(id,ss,to):
         'outtmpl': 'videos\\%(title).100s'+ss+'.'+to+'.%(resolution)s.%(id)s.v1.%(ext)s',        
         'noplaylist' : True,    
         'socket_timeout': 60, 
+        'throttledratelimit': 50000000,
         #'progress_hooks': [my_hook],
         #'compat_opts': 'no-direct-merge',
         #'format': 'bestvideo[vcodec*=avc1][height=1080]+bestaudio[acodec*=aac]/bestvideo[vcodec*=avc1][height=1080]+bestaudio[acodec*=mp3]/bestvideo[vcodec*=avc1][height=1080]+bestaudio[acodec*=mp4a]/bestvideo[height=1080]+bestaudio/bestvideo[vcodec*=avc1][height<=?1080]+bestaudio[acodec*=aac]/bestvideo[vcodec*=avc1][height<=?1080]+bestaudio[acodec*=mp3]/bestvideo[vcodec*=avc1][height<=?1080]+bestaudio[acodec*=mp4a]/bestvideo[vcodec*=avc1][height<=?1080]+bestaudio/bestvideo[height<=?1080]+bestaudio[acodec=aac]/bestvideo[height<=?1080]+bestaudio[acodec=mp3]/bestvideo[height<=?1080]+bestaudio[acodec=mp4a]/bestvideo[height<=?1080]+bestaudio/best',
@@ -22,6 +23,7 @@ def download_one_vid(id,ss,to):
         try:
             ydl.download([id])
         except youtube_dl.utils.DownloadError as err:
+            print('ERRROR!!!!!!')
             print(err)
 
 def main():
