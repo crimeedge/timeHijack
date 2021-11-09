@@ -6,3 +6,4 @@ selenium
 pyformance
 pyperclip
 webdriver-manager
+yt-dlp
