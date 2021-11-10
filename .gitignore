@@ -12,3 +12,6 @@ cook.py
 a.webm
 ffprobe.exe
 yt-dlp.exe
+clean/
+probe.py
+archive.txt
