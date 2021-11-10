@@ -37,27 +37,27 @@ if __name__ == "__main__":
         if cached_dict[id]["tim"][1]=="" or reset_cache:
             try:
                 comment = youtubeComments.get_one_comment(youtube,id,"Undesirable Truism")
-                
-                for i,line in enumerate(comment.splitlines()):
-                    print("line",video_ids[id]["pos"]+1,line)
-                    tim = comment_grabber_prog.search(line)
-                    #populate the time by the group prog to the line
-                    # expand list if necessary
-                    if tim:
-                        if 2*i+2 > len(cached_dict[id]["tim"]):
-                            cached_dict[id]["tim"].extend([""]*(2*i+2-len(cached_dict[id]["tim"])))
-                        cached_dict[id]["tim"][2*i]=tim.group(1)
-                        cached_dict[id]["tim"][2*i+1]=tim.group(2)
-                        print("tim",tim.group(2))
-                    else:
-                        
-                        tim_weak = comment_grabber_prog_weak.search(line)
-                        print("tim_weak",tim_weak)
-                        if tim_weak:
+                if comment:
+                    for i,line in enumerate(comment.splitlines()):
+                        print("line",video_ids[id]["pos"]+1,line)
+                        tim = comment_grabber_prog.search(line)
+                        #populate the time by the group prog to the line
+                        # expand list if necessary
+                        if tim:
                             if 2*i+2 > len(cached_dict[id]["tim"]):
                                 cached_dict[id]["tim"].extend([""]*(2*i+2-len(cached_dict[id]["tim"])))
-                            cached_dict[id]["tim"][2*i]=tim_weak.group(1)
-                            # print("tim_weak",tim_weak.group(1))
+                            cached_dict[id]["tim"][2*i]=tim.group(1)
+                            cached_dict[id]["tim"][2*i+1]=tim.group(2)
+                            print("tim",tim.group(2))
+                        else:
+                            
+                            tim_weak = comment_grabber_prog_weak.search(line)
+                            print("tim_weak",tim_weak)
+                            if tim_weak:
+                                if 2*i+2 > len(cached_dict[id]["tim"]):
+                                    cached_dict[id]["tim"].extend([""]*(2*i+2-len(cached_dict[id]["tim"])))
+                                cached_dict[id]["tim"][2*i]=tim_weak.group(1)
+                                # print("tim_weak",tim_weak.group(1))
             except HttpError as err:
                 print(err)
                 pass

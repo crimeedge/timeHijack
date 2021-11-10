@@ -8,3 +8,7 @@ selenium_tests/
 debug.log
 ffmpeg.exe
 videos/
+cook.py
+a.webm
+ffprobe.exe
+yt-dlp.exe
