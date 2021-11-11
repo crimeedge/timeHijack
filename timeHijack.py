@@ -50,23 +50,22 @@ def main():
         # cache
         if id in cached_dict and "tim" in cached_dict[id] and len(cached_dict[id]["tim"])>0:
             ms_pair = youtubeComments.get_time_from_comment(cached_dict[id]["tim"][0])
-            print("cached stuff yea")
+            
         #notcache
         if not ms_pair:
             try:
                 ms_pair = youtubeComments.get_comment_time(youtube, video_id)
-                print(ms_pair)
+                print("nocache",ms_pair)
             except HttpError as err:
                 print(err)
                 ms_pair = None
-        #check prev and update
-        if cached_dict[prev_id]["tim"][1]=="":
+        #check prev and update also # modularize??? prev_id and id and timegrabber...
+        
+        if prev_id in cached_dict and "tim" in cached_dict[prev_id] and len(cached_dict[prev_id]["tim"])>0 and cached_dict[prev_id]["tim"][1]=="":
             try:
                 comment = youtubeComments.get_one_comment(youtube,prev_id,"Undesirable Truism")
-                # modularize???
                 if comment:
                     for i,line in enumerate(comment.splitlines()):
-                        #print("line",video_ids[id]["pos"]+1,line)
                         tim = comment_grabber_prog.search(line)
                         #populate the time by the group prog to the line
                         # expand list if necessary
