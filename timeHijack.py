@@ -25,8 +25,9 @@ def check_diff_video_id(driver):
 
 def main():
     filename = "dIAll.json"
-    cached_dict = defaultdict(lambda: dict(), json.load(open(filename, 'r')))
-
+    f=open(filename, 'r')
+    cached_dict = defaultdict(lambda: dict(), json.load(f))
+    f.close()
     youtube = get_api_service()
     # global driver
     driver = create_driver(True, True)
