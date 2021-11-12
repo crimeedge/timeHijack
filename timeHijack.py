@@ -12,6 +12,21 @@ from youtube.youtubeMake import get_api_service
 from multiprocessing import Process, Lock
 import testdl
 
+import threading
+
+class InputThread(threading.Thread):
+    def __init__(self):
+        super(InputThread, self).__init__()
+        self.daemon = True
+        self.last_user_input = None
+
+    def run(self):
+        while True:
+            self.last_user_input = input('input something: ')
+            # do something based on the user input here
+            # alternatively, let main do something with
+            # self.last_user_input
+
 video_id = "INIT"
 
 
@@ -27,6 +42,8 @@ def check_diff_video_id(driver):
 
 
 def main():
+    it = InputThread()
+    it.start()
     lock = Lock()
     youtube = get_api_service()
     # global driver
@@ -34,15 +51,22 @@ def main():
     # login_to_youtube(driver)
     driver.get("https://www.youtube.com/channel/UCuQjQ-iqbHh-hIMrDwfYfYA/")
     global video_id
+    prev_last_inp = None
+    inp_changed = False
     for _ in range(99999):
-        print(video_id)
+        # print("curr vid",video_id)
         #store previous id
-        prev_id = video_id
+        
+
         WebDriverWait(driver, 99999).until(check_diff_video_id)
-        # print(video_id)
+
+        # this is where the video id changes.
+        prev_id = video_id
+
+        inp_changed = (prev_last_inp != it.last_user_input)
+        prev_last_inp = it.last_user_input
+
         video_id = video_id_prog.search(driver.current_url).group(1)
-        # print(video_id)
-        id = video_id
         ms_pair = None
 
         filename = "dIAll.json"
@@ -50,9 +74,9 @@ def main():
         cached_dict = defaultdict(lambda: dict(), json.load(f))
         f.close()
         # cache
-        if id in cached_dict and "tim" in cached_dict[id] and len(cached_dict[id]["tim"]) > 0:
+        if video_id in cached_dict and "tim" in cached_dict[video_id] and len(cached_dict[video_id]["tim"]) > 0:
             ms_pair = youtubeComments.get_time_from_comment(
-                cached_dict[id]["tim"][0])
+                cached_dict[video_id]["tim"][0])
 
         #notcache
         if not ms_pair:
@@ -64,51 +88,69 @@ def main():
                 ms_pair = None
         #check prev and update also # modularize??? prev_id and id and timegrabber...
 
-        #safety checks
-        if prev_id in cached_dict and "tim" in cached_dict[prev_id] and len(cached_dict[prev_id]["tim"]) > 0:
-            try:
+        #safety checks - outdated
+        # if prev_id in cached_dict and "tim" in cached_dict[prev_id] and len(cached_dict[prev_id]["tim"]) > 0:
+        if "tim" not in cached_dict[prev_id]:
+            cached_dict[prev_id]["tim"] = [""]*2
+        if "nam" not in cached_dict[prev_id]: 
+            cached_dict[prev_id]["nam"]=dict()
+            cached_dict[prev_id]["nam"]["IAl"]=""
+        try:
+            
+            
+            ## TODO: check that the current inp diff prev inp, and also passes the strong prog
+            print("changed?",prev_id,inp_changed,prev_last_inp)
+            if prev_id!="INIT" and cached_dict[prev_id]["tim"][1] == "" and inp_changed:
+                tim = comment_grabber_prog.search(prev_last_inp)
+                if tim:
+                    cached_dict[prev_id]["tim"][0] = tim.group(1)
+                    cached_dict[prev_id]["tim"][1] = tim.group(2)
+                    print("new upd",prev_id,cached_dict[prev_id]["tim"][0],cached_dict[prev_id]["tim"][1] )
+            # update the dict
+                    with open(filename, 'w') as outfile:
+                        outfile.write(json.dumps(cached_dict, indent=4))
 
-                if cached_dict[prev_id]["tim"][1] == "":
-                    comment = youtubeComments.get_one_comment(
-                        youtube, prev_id, "Undesirable Truism")
-                    if comment:
-                        for i, line in enumerate(comment.splitlines()):
-                            tim = comment_grabber_prog.search(line)
-                            #populate the time by the group prog to the line
-                            # expand list if necessary
-                            if tim:
+            if cached_dict[prev_id]["tim"][1] == "" and prev_id!="INIT":
+                comment = youtubeComments.get_one_comment(
+                    youtube, prev_id, "Undesirable Truism")
+                if comment:
+                    for i, line in enumerate(comment.splitlines()):
+                        tim = comment_grabber_prog.search(line)
+                        #populate the time by the group prog to the line
+                        # expand list if necessary
+                        if tim:
+                            if 2*i+2 > len(cached_dict[prev_id]["tim"]):
+                                cached_dict[prev_id]["tim"].extend(
+                                    [""]*(2*i+2-len(cached_dict[prev_id]["tim"])))
+                            cached_dict[prev_id]["tim"][2*i] = tim.group(1)
+                            cached_dict[prev_id]["tim"][2 *
+                                                        i+1] = tim.group(2)
+                            print("tim", tim.group(2))
+                        else:
+
+                            tim_weak = comment_grabber_prog_weak.search(
+                                line)
+                            print("tim_weak", tim_weak)
+                            if tim_weak:
                                 if 2*i+2 > len(cached_dict[prev_id]["tim"]):
                                     cached_dict[prev_id]["tim"].extend(
                                         [""]*(2*i+2-len(cached_dict[prev_id]["tim"])))
-                                cached_dict[prev_id]["tim"][2*i] = tim.group(1)
                                 cached_dict[prev_id]["tim"][2 *
-                                                            i+1] = tim.group(2)
-                                print("tim", tim.group(2))
-                            else:
-
-                                tim_weak = comment_grabber_prog_weak.search(
-                                    line)
-                                print("tim_weak", tim_weak)
-                                if tim_weak:
-                                    if 2*i+2 > len(cached_dict[prev_id]["tim"]):
-                                        cached_dict[prev_id]["tim"].extend(
-                                            [""]*(2*i+2-len(cached_dict[prev_id]["tim"])))
-                                    cached_dict[prev_id]["tim"][2 *
-                                                                i] = tim_weak.group(1)
-                                    # print("tim_weak",tim_weak.group(1))
-                        with open(filename, 'w') as outfile:
-                            outfile.write(json.dumps(cached_dict, indent=4))
-                # try downloading in processes, should be ALL PREV
-                for i in range(0, len(cached_dict[prev_id]["tim"]), 2):
-                    ss = cached_dict[prev_id]["tim"][i]
-                    to = cached_dict[prev_id]["tim"][i+1]
-                    print("startdl", prev_id, ss, to)
-                    Process(target=testdl.download_one_cache_wrap,
-                            args=(prev_id, ss, to, lock)).start()
-                    print("ENDDL", prev_id, ss, to)
-            except HttpError as err:
-                print(err)
-                pass
+                                                            i] = tim_weak.group(1)
+                                # print("tim_weak",tim_weak.group(1))
+                    with open(filename, 'w') as outfile:
+                        outfile.write(json.dumps(cached_dict, indent=4))
+            # try downloading in processes, should be ALL PREV
+            for i in range(0, len(cached_dict[prev_id]["tim"]), 2):
+                ss = cached_dict[prev_id]["tim"][i]
+                to = cached_dict[prev_id]["tim"][i+1]
+                # print("startdl", prev_id, ss, to)
+                Process(target=testdl.download_one_cache_wrap,
+                        args=(prev_id, ss, to, lock)).start()
+                # print("ENDDL", prev_id, ss, to)
+        except HttpError as err:
+            print(err)
+            pass
 
         #10 sec barrier
         if ms_pair and (int(ms_pair[0]) > 0 or int(ms_pair[1]) > 10):
