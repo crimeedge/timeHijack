@@ -254,8 +254,9 @@ def re_playlist(youtube, downloaded):
                 with open("downloadTracker.json", 'w') as outfile:
                     outfile.write(json.dumps(downloaded, indent=4))
 
-if __name__ == '__main__':
-    youtube = get_authenticated_service()
+
+def upload_once(UPLOADSMAX = 5,secret="p"):
+    youtube = get_authenticated_service(secret=secret)
 
     cached_dict = dict()
     filename = "dIAll.json"
@@ -271,14 +272,13 @@ if __name__ == '__main__':
 
 
     dir = r'clean\videos'
-    UPLOADSMAX = 1
+    
     uploads = 0
     for filename in os.listdir(dir):
         if uploads >= UPLOADSMAX:
             break
         match_obj = upload_prog.match(filename)
         if match_obj:
-            
             downloaded = dict()  # important to not b default
             with open("downloadTracker.json", 'r') as infile:
                 downloaded = dict(json.load(infile))
@@ -303,7 +303,6 @@ if __name__ == '__main__':
 
                             new_id = response["id"]
                             for nam in cached_dict[opts.oldid]["nam"]:
-
                                 resp2=insert_vid_into_playlist(youtube,new_id,playdict[nam][1]) #mappedto
                                 print(new_id,resp2['kind'])
 
@@ -312,3 +311,9 @@ if __name__ == '__main__':
                     except HttpError as e:
                         print("An HTTP error %d occurred:\n%s" %
                                 (e.resp.status, e.content))
+
+if __name__ == '__main__':
+    for secret in ["p","q",]:
+    # for secret in ["r","s"]:
+    # for secret in ["p","q","r","s"]:
+        upload_once(5,secret)

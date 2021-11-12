@@ -26,11 +26,9 @@ def get_api_service(key=None):
 
 
 
-def get_authenticated_service(scopes=default_scope):
+def get_authenticated_service(scopes=default_scope, secret="p"):
     api_service_name = "youtube"
     api_version = "v3"
-    print("secret?:")
-    secret = input()
     client_secrets_file = secret+".json"
     global flow
     # Get credentials and create an API client
