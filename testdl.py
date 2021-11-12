@@ -100,8 +100,8 @@ def main():
     cached_dict = defaultdict(lambda: dict(), json.load(f))
     f.close()
     for id in (cached_dict):
-        # if "tim" in cached_dict[id] and cached_dict[id]['pos']>=21:
-        if "tim" in cached_dict[id] and cached_dict[id]['pos']<=5:
+        if "tim" in cached_dict[id] and cached_dict[id]['pos']<=49:
+        # if "tim" in cached_dict[id] and cached_dict[id]['pos']:
             for i in range(0,len(cached_dict[id]["tim"]),2):
                 ss=cached_dict[id]["tim"][i]
                 to=cached_dict[id]["tim"][i+1]
