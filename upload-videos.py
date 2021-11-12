@@ -20,6 +20,7 @@ from googleapiclient.http import MediaFileUpload
 
 from oauth2client.tools import argparser, run_flow
 
+
 # Explicitly tell the underlying HTTP transport library not to retry, since
 # we are handling retry logic ourselves.
 httplib2.RETRIES = 1
@@ -208,6 +209,7 @@ def get_video_ids_and_pos(items):
 def make_opts(dir, title_or_filename):
     db = desc_big_prog.match(title_or_filename)
     dd = desc_prog.match(title_or_filename)
+    opts = None 
     description = ""
     if db:
         description = r'https://www.youtube.com/watch?v=' + \
@@ -217,32 +219,29 @@ def make_opts(dir, title_or_filename):
                         db.group(1) + \
                         '&t=' + db.group(2) + 'h' + \
                         db.group(3) + 'm'+db.group(4) + 's'
+        opts = SimpleNamespace(
+                        privacyStatus="unlisted", title=title_or_filename, description=description, file=dir+"\\"+title_or_filename, category="22", keywords="",oldid=db.group(1))
+        
     elif dd:
         description = r'https://www.youtube.com/watch?v=' + \
                         dd.group(1)+r'&list=PLXoAM842ovaA_RSh_qFXCKC4dT780z5P5' + \
                         '&t=' + dd.group(2) + 'm'+dd.group(3) + 's' + '\n' + r'https://www.youtube.com/watch?v=' + \
                         dd.group(1) + \
                         '&t=' + dd.group(2) + 'm'+dd.group(3) + 's'
-    opts = None            
-    if db or dd:
         opts = SimpleNamespace(
-                        privacyStatus="unlisted", title=title_or_filename, description=description, file=dir+"\\"+title_or_filename, category="22", keywords="")
-            
+                        privacyStatus="unlisted", title=title_or_filename, description=description, file=dir+"\\"+title_or_filename, category="22", keywords="",oldid=dd.group(1))
+             
     return opts
 
-if __name__ == '__main__':
-    youtube = get_authenticated_service()
-
+# try to playlist up the already uploaded lists.
+def re_playlist(youtube, downloaded):
     vids_dict = get_video_ids_and_pos(
         ytpi.get_playlist_items_from_id(youtube, "UUuQjQ-iqbHh-hIMrDwfYfYA"))
-    downloaded = defaultdict(lambda: [0]*3)
-    with open("downloadTracker.json", 'r') as infile:
-      downloaded = defaultdict(lambda: [0]*3, json.load(infile))
+    
     for id in vids_dict:
         title_sig = vids_dict[id]["cap"].split("@")[0] #get the prefix
         print(title_sig,vids_dict[id]["cap"])
         if downloaded[title_sig][2]!=1:
-            
             # check that desc is updated
             # also insert to playlist
             opts = make_opts("",vids_dict[id]["cap"])
@@ -255,34 +254,59 @@ if __name__ == '__main__':
                 with open("downloadTracker.json", 'w') as outfile:
                     outfile.write(json.dumps(downloaded, indent=4))
 
+if __name__ == '__main__':
+    youtube = get_authenticated_service()
+
+    cached_dict = dict()
+    filename = "dIAll.json"
+    with open(filename, 'r') as f:
+        cached_dict = defaultdict(lambda: dict(), json.load(f))
+
+    downloaded = defaultdict(lambda: [0]*3)
+    with open("downloadTracker.json", 'r') as infile:
+      downloaded = defaultdict(lambda: [0]*3, json.load(infile))
+    
+        
+    # re_playlist( youtube, downloaded)
+
 
     dir = r'clean\videos'
-    UPLOADSMAX = 6
+    UPLOADSMAX = 1
     uploads = 0
     for filename in os.listdir(dir):
         if uploads >= UPLOADSMAX:
             break
         match_obj = upload_prog.match(filename)
         if match_obj:
-            print(filename)
+            
             downloaded = dict()  # important to not b default
             with open("downloadTracker.json", 'r') as infile:
                 downloaded = dict(json.load(infile))
             if match_obj.group(1) in downloaded and len(downloaded[match_obj.group(1)]) >= 3 and downloaded[match_obj.group(1)][2] != 1:
-                
+                print(filename)
                 opts = make_opts(dir, filename)
                 if opts:
                     try:
                         response = initialize_upload(youtube, opts)
                         if response:
+                            print("uploaded",opts.title)
                             downloaded = defaultdict(lambda: [0]*3)
                             with open("downloadTracker.json", 'r') as infile:
                                 downloaded = defaultdict(
                                     lambda: [0]*3, json.load(infile))
                             downloaded[match_obj.group(1)][2] = 1
                             uploads += 1 
-                            resp2=insert_vid_into_playlist(youtube,response["id"],"PLXoAM842ovaC2m60u5BSAHmwjGTpqXGk4")
-                            print(response['id'],resp2['kind'])
+
+                            playdict = dict()
+                            with open("playlistMap.json",'r') as f:
+                                playdict = dict(json.load(f))
+
+                            new_id = response["id"]
+                            for nam in cached_dict[opts.oldid]["nam"]:
+
+                                resp2=insert_vid_into_playlist(youtube,new_id,playdict[nam][1]) #mappedto
+                                print(new_id,resp2['kind'])
+
                             with open("downloadTracker.json", 'w') as outfile:
                                 outfile.write(json.dumps(downloaded, indent=4))
                     except HttpError as e:
