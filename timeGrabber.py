@@ -15,12 +15,27 @@ def get_video_ids_and_pos(items):
         video_ids[item['snippet']['resourceId']['videoId']] = position_dict
     return video_ids
 
+def update_dict_playlists(cached_dict,items,playlistName):
+    print("udpate_dict",playlistName)
+    for item in items:
+        id = item['snippet']['resourceId']['videoId']
+        print("udatedict id",id)
+        if id in cached_dict:
+            print("isid")
+            if "nam" not in cached_dict[id]:
+                cached_dict[id]["nam"]=dict()
+            cached_dict[id]["nam"][playlistName]="" #make dictionary for this in json!
+
+
+
+
 if __name__ == "__main__":
     reset_cache = False
+    
     filename = "dIAll.json"
     cached_dict = defaultdict(lambda: dict(), json.load(open(filename, 'r')))
     youtube = youtubeMake.get_api_service()
-    playlist_ids = "PLXoAM842ovaA_RSh_qFXCKC4dT780z5P5".split(",") #IAll
+    playlist_ids = "PLXoAM842ovaA_RSh_qFXCKC4dT780z5P5".split(",") #only IAll
     items = []
     for playlist_id in playlist_ids:
         items.extend(get_playlist_items_from_id(youtube, playlist_id))
@@ -61,7 +76,13 @@ if __name__ == "__main__":
             except HttpError as err:
                 print(err)
                 pass
-            
+
+    playdict = dict()
+    with open("playlistMap.json",'r') as f:
+        playdict = dict(json.load(f))
+    for playlistName in playdict:
+        update_dict_playlists(cached_dict,get_playlist_items_from_id(youtube, playdict[playlistName][0]),playlistName) #feed source
+             
 
     with open(filename, 'w') as outfile:
         outfile.write(json.dumps(cached_dict, indent=4))
