@@ -1,6 +1,13 @@
 import dateutil.parser
 import dateutil.tz
 
+#playlistItems to videoIds
+def get_video_ids(items):
+    video_ids = []
+    for item in items:
+        # print(item['snippet']['title'])
+        video_ids.append(item['snippet']['resourceId']['videoId'])
+    return video_ids
 
 def get_playlist_items_from_id(youtube, playlist_id="PLXoAM842ovaC5y2JmwjqNf9M4cosmGO12"):
     request = youtube.playlistItems().list(

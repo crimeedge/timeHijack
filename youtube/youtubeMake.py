@@ -29,7 +29,9 @@ def get_api_service(key=None):
 def get_authenticated_service(scopes=default_scope):
     api_service_name = "youtube"
     api_version = "v3"
-    client_secrets_file = "o.json"
+    print("secret?:")
+    secret = input()
+    client_secrets_file = secret+".json"
     global flow
     # Get credentials and create an API client
     flow = google_auth_oauthlib.flow.InstalledAppFlow.from_client_secrets_file(
@@ -49,17 +51,25 @@ def _run_selenium(flow, **kwargs):
 
     driver = create_driver()
     driver.get(auth_url)
-    WebDriverWait(driver, 60).until(_run_selenium2)
+    WebDriverWait(driver, 20).until(
+    ec.element_to_be_clickable((By.CSS_SELECTOR, ".wLBAL"))).click()
+    WebDriverWait(driver, 20).until(
+    ec.element_to_be_clickable((By.LINK_TEXT, "Advanced"))).click()
+    WebDriverWait(driver, 20).until(
+    ec.element_to_be_clickable((By.LINK_TEXT, "Go to timeHijack (unsafe)"))).click()
+    WebDriverWait(driver, 20).until(
+    ec.element_to_be_clickable((By.XPATH, "//*[@id=\"submit_approve_access\"]/div/button/span"))).click()
+    WebDriverWait(driver, 20).until(
+    ec.visibility_of_element_located((By.XPATH, "//*[@id=\"view_container\"]/div/div/div[2]/div/div[1]/div/form/span/section/div/div/div/span/div/textarea")))
+    WebDriverWait(driver, 20).until(_run_selenium2)
     driver.quit()
     return flow.credentials
 
-# horrible call function that bashes fetch until copipe succeeds
+# get code from selen grab
 def _run_selenium2(driver):
     try:
-        codee=pyperclip.paste()
         global flow
-        flow.fetch_token(code=codee)
-        print(codee)
+        flow.fetch_token(code=driver.find_element(By.XPATH, "//*[@id=\"view_container\"]/div/div/div[2]/div/div[1]/div/form/span/section/div/div/div/span/div/textarea").text)
         return True
     except BaseException as e:
         print(e)

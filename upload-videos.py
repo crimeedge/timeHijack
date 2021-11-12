@@ -1,5 +1,6 @@
 
 
+import re
 import httplib2
 import os
 import random
@@ -7,6 +8,8 @@ import time
 from googleapiclient.errors import HttpError
 from youtube.youtubeMake import get_authenticated_service
 import os
+
+import youtube.youtubePlaylistItems as ytpi
 
 from collections import defaultdict
 import json
@@ -22,7 +25,7 @@ from oauth2client.tools import argparser, run_flow
 httplib2.RETRIES = 1
 
 # Maximum number of times to retry before giving up.
-MAX_RETRIES = 3
+MAX_RETRIES = 1
 
 # Always retry when these exceptions are raised.
 RETRIABLE_EXCEPTIONS = (httplib2.HttpLib2Error, IOError
@@ -128,7 +131,7 @@ def resumable_upload(insert_request):
       if response is not None:
         if 'id' in response:
           print("Video id '%s' was successfully uploaded." % response['id'])
-          return True
+          return response
         else:
           exit("The upload failed with an unexpected response: %s" % response)
     except HttpError as e:
@@ -150,13 +153,115 @@ def resumable_upload(insert_request):
       sleep_seconds = random.random() * max_sleep
       print("Sleeping %f seconds and then retrying..." % sleep_seconds)
       time.sleep(sleep_seconds)
-    return False
+    return None
 
+# gonna need to modularlize this too
+
+def update_video(youtube,id,options):
+    try:
+        request = youtube.videos().update(
+            part="snippet,status",
+            body={
+            "id": id,
+            "snippet": {
+                "description": options.description,
+                "title": options.title,
+                "categoryId": options.category
+            },
+            "status": {
+                "privacyStatus":options.privacyStatus
+            }
+            }
+        )
+        return request.execute()
+    except BaseException as e:
+        print(e)
+        return None
+
+
+def insert_vid_into_playlist(youtube, video_id, playlist_id):
+    request = youtube.playlistItems().insert(
+        part="snippet",
+        body={
+            "snippet": {
+                "playlistId": playlist_id,
+                "resourceId": {
+                    "kind": "youtube#video",
+                    "videoId": video_id
+                }
+            }
+        }
+    )
+    response = request.execute()
+    return response
+
+def get_video_ids_and_pos(items):
+    video_ids = dict()
+    for item in items:
+        position_dict = dict()
+        position_dict["cap"] = item['snippet']['title']
+        position_dict["pos"] = item['snippet']['position']
+        video_ids[item['snippet']['resourceId']['videoId']] = position_dict
+    return video_ids
+
+
+def make_opts(dir, title_or_filename):
+    db = desc_big_prog.match(title_or_filename)
+    dd = desc_prog.match(title_or_filename)
+    description = ""
+    if db:
+        description = r'https://www.youtube.com/watch?v=' + \
+                        db.group(1)+r'&list=PLXoAM842ovaA_RSh_qFXCKC4dT780z5P5' + \
+                        '&t=' + db.group(2) + 'h' + \
+                        db.group(3) + 'm'+db.group(4) + 's' + '\n' + r'https://www.youtube.com/watch?v=' + \
+                        db.group(1) + \
+                        '&t=' + db.group(2) + 'h' + \
+                        db.group(3) + 'm'+db.group(4) + 's'
+    elif dd:
+        description = r'https://www.youtube.com/watch?v=' + \
+                        dd.group(1)+r'&list=PLXoAM842ovaA_RSh_qFXCKC4dT780z5P5' + \
+                        '&t=' + dd.group(2) + 'm'+dd.group(3) + 's' + '\n' + r'https://www.youtube.com/watch?v=' + \
+                        dd.group(1) + \
+                        '&t=' + dd.group(2) + 'm'+dd.group(3) + 's'
+    opts = None            
+    if db or dd:
+        opts = SimpleNamespace(
+                        privacyStatus="unlisted", title=title_or_filename, description=description, file=dir+"\\"+title_or_filename, category="22", keywords="")
+            
+    return opts
 
 if __name__ == '__main__':
     youtube = get_authenticated_service()
+
+    vids_dict = get_video_ids_and_pos(
+        ytpi.get_playlist_items_from_id(youtube, "UUuQjQ-iqbHh-hIMrDwfYfYA"))
+    downloaded = defaultdict(lambda: [0]*3)
+    with open("downloadTracker.json", 'r') as infile:
+      downloaded = defaultdict(lambda: [0]*3, json.load(infile))
+    for id in vids_dict:
+        title_sig = vids_dict[id]["cap"].split("@")[0] #get the prefix
+        print(title_sig,vids_dict[id]["cap"])
+        if downloaded[title_sig][2]!=1:
+            
+            # check that desc is updated
+            # also insert to playlist
+            opts = make_opts("",vids_dict[id]["cap"])
+            print(str(opts))
+            response = update_video(youtube, id, opts)
+            print(str(response))
+            if opts and response:
+                insert_vid_into_playlist(youtube,id,"PLXoAM842ovaC2m60u5BSAHmwjGTpqXGk4")
+                downloaded[title_sig][2]=1
+                with open("downloadTracker.json", 'w') as outfile:
+                    outfile.write(json.dumps(downloaded, indent=4))
+
+
     dir = r'clean\videos'
+    UPLOADSMAX = 6
+    uploads = 0
     for filename in os.listdir(dir):
+        if uploads >= UPLOADSMAX:
+            break
         match_obj = upload_prog.match(filename)
         if match_obj:
             print(filename)
@@ -164,33 +269,22 @@ if __name__ == '__main__':
             with open("downloadTracker.json", 'r') as infile:
                 downloaded = dict(json.load(infile))
             if match_obj.group(1) in downloaded and len(downloaded[match_obj.group(1)]) >= 3 and downloaded[match_obj.group(1)][2] != 1:
-                db = desc_big_prog.match(filename)
-                dd = desc_prog.match(filename)
-                description = ""
-                if db:
-                    description = r'https://www.youtube.com/watch?v=' + \
-                        db.group(1)+r'&list=PLXoAM842ovaA_RSh_qFXCKC4dT780z5P5' + \
-                        '&t=' + db.group(2) + 'h' + \
-                        db.group(3) + 'm'+db.group(4) + 's' + '\n' + r'https://www.youtube.com/watch?v=' + \
-                        db.group(1) + \
-                        '&t=' + db.group(2) + 'h' + \
-                        db.group(3) + 'm'+db.group(4) + 's'
-                elif dd:
-                    description = r'https://www.youtube.com/watch?v=' + \
-                        dd.group(1)+r'&list=PLXoAM842ovaA_RSh_qFXCKC4dT780z5P5' + \
-                        '&t=' + dd.group(2) + 'm'+dd.group(3) + 's' + '\n' + r'https://www.youtube.com/watch?v=' + \
-                        dd.group(1) + \
-                        '&t=' + dd.group(2) + 'm'+dd.group(3) + 's'
-                if db or dd:
-                    opts = SimpleNamespace(
-                        privacyStatus="unlisted", title=filename, description=description, file=dir+"\\"+filename,category = "22",keywords = "")
+                
+                opts = make_opts(dir, filename)
+                if opts:
                     try:
-                        if initialize_upload(youtube,opts):
+                        response = initialize_upload(youtube, opts)
+                        if response:
                             downloaded = defaultdict(lambda: [0]*3)
                             with open("downloadTracker.json", 'r') as infile:
-                                downloaded = defaultdict(lambda: [0]*3, json.load(infile))
-                            downloaded[match_obj.group(1)][2]=1
+                                downloaded = defaultdict(
+                                    lambda: [0]*3, json.load(infile))
+                            downloaded[match_obj.group(1)][2] = 1
+                            uploads += 1 
+                            resp2=insert_vid_into_playlist(youtube,response["id"],"PLXoAM842ovaC2m60u5BSAHmwjGTpqXGk4")
+                            print(response['id'],resp2['kind'])
                             with open("downloadTracker.json", 'w') as outfile:
                                 outfile.write(json.dumps(downloaded, indent=4))
                     except HttpError as e:
-                        print ("An HTTP error %d occurred:\n%s" % (e.resp.status, e.content))
+                        print("An HTTP error %d occurred:\n%s" %
+                                (e.resp.status, e.content))

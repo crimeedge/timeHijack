@@ -76,7 +76,7 @@ def my_hook(d):
 
 def download_one_vid(id,ss,to):
     ydl_opts = {      
-        'outtmpl': 'videos\\%(id)s#'+ss.replace(":",".")+'#'+to.replace(":",".")+'@.%(title).100s.%(resolution)s.v1.%(ext)s',        
+        'outtmpl': 'videos\\%(id)s#'+ss.replace(":",".")+'#'+to.replace(":",".")+'@.%(title).50s.%(resolution)s.v1.%(ext)s',        
         'noplaylist' : True,    
         'external_downloader': 'ffmpeg' , 
         'sleep_interval': 1,
@@ -105,12 +105,22 @@ def main():
             for i in range(0,len(cached_dict[id]["tim"]),2):
                 ss=cached_dict[id]["tim"][i]
                 to=cached_dict[id]["tim"][i+1]
-                if ss != "" and to != "":
-                    downloaded = defaultdict(lambda: [0]*3)
-                    with open("downloadTracker.json", 'r') as infile:
-                        downloaded = defaultdict(lambda: [0]*3, json.load(infile))
-                    if downloaded[id+"."+ss.replace(":",".")+"."+to.replace(":",".")][0]!=1:
-                        download_one_vid(id,cached_dict[id]["tim"][i],cached_dict[id]["tim"][i+1])
+                download_one_cache_wrap(id, ss, to, None)
+
+def download_one_cache_wrap(id, ss, to, lock):
+    if lock:
+        lock.acquire()
+    try:
+        if ss != "" and to != "":
+            downloaded = defaultdict(lambda: [0]*3)
+            with open("downloadTracker.json", 'r') as infile:
+                downloaded = defaultdict(lambda: [0]*3, json.load(infile))
+            if downloaded[id+"#"+ss.replace(":",".")+"#"+to.replace(":",".")][0]!=1:
+                print("actualdl",id,ss,to)
+                download_one_vid(id,ss,to)
+    finally:
+        if lock:
+            lock.release()
 
 if __name__ == "__main__":
     main()

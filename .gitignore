@@ -1,6 +1,9 @@
 .creds*
 o.json
 p.json
+q.json
+r.json
+s.json
 chrome-data
 .idea/
 __pycache__/
@@ -15,3 +18,4 @@ yt-dlp.exe
 clean/
 probe.py
 archive.txt
+youtube/test_asdasd.py
