@@ -314,6 +314,6 @@ def upload_once(UPLOADSMAX = 5,secret="p"):
 
 if __name__ == '__main__':
     # for secret in ["p","q",]:
-    # for secret in ["p","q","o"]:
-    for secret in ["t"]:
+    # for secret in ["t","q","p"]:
+    for secret in ["u"]:
         upload_once(5,secret)

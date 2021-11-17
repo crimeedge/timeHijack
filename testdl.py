@@ -38,16 +38,21 @@ def probe(filename, cmd='ffprobe', timeout=None, **kwargs):
 
 # trim the file to the first frame
 def trim(filename):
-    sss = probe(filename)["frames"][0]["best_effort_timestamp_time"]
-    print(sss)
-    (
-        ffmpeg
-        .input(filename,ss=sss,analyzeduration="100M",probesize="100M")
-        .output('clean\\'+filename,c="copy").overwrite_output().run()
-    )
-    os.remove(filename)
+    if "frames" in probe(filename) and len(probe(filename)["frames"]) and "best_effort_timestamp_time" in probe(filename)["frames"][0]:
 
-    #pleasee modularize
+        sss = probe(filename)["frames"][0]["best_effort_timestamp_time"]
+        print(sss)
+        (
+            ffmpeg
+            .input(filename,ss=sss,analyzeduration="100M",probesize="100M")
+            .output('clean\\'+filename,c="copy").overwrite_output().run()
+        )
+        os.remove(filename)
+
+        #pleasee modularize
+    else:
+        os.rename(filename,'clean\\'+filename)
+
     match_obj=download_prog.match(filename)
     if match_obj:
         downloaded = defaultdict(lambda: [0]*3)
@@ -100,7 +105,7 @@ def main():
     cached_dict = defaultdict(lambda: dict(), json.load(f))
     f.close()
     for id in (cached_dict):
-        if "tim" in cached_dict[id] and cached_dict[id]['pos']<=84:
+        if "tim" in cached_dict[id] and cached_dict[id]['pos']<=101:
         # if "tim" in cached_dict[id] and cached_dict[id]['pos']:
             for i in range(0,len(cached_dict[id]["tim"]),2):
                 ss=cached_dict[id]["tim"][i]
