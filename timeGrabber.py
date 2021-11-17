@@ -46,10 +46,11 @@ if __name__ == "__main__":
         cached_dict[id]["pos"]=video_ids[id]["pos"]+1
         cached_dict[id]["cap"]=video_ids[id]["cap"]
         #hard code some json garbage to setup times
-        if not cached_dict[id]["tim"]:
+        if "tim" not in cached_dict[id]:
             cached_dict[id]["tim"]=["",""]
             # if nothing in the end time
-        if cached_dict[id]["tim"][1]=="" or reset_cache:
+        if (cached_dict[id]["tim"][1]=="" or reset_cache) and cached_dict[id]["pos"]<=82:
+        # if (cached_dict[id]["tim"][1]=="" or reset_cache) and cached_dict[id]["pos"]<=82:
             try:
                 comment = youtubeComments.get_one_comment(youtube,id,"Undesirable Truism")
                 if comment:

@@ -313,7 +313,7 @@ def upload_once(UPLOADSMAX = 5,secret="p"):
                                 (e.resp.status, e.content))
 
 if __name__ == '__main__':
-    for secret in ["p","q",]:
-    # for secret in ["r","s"]:
-    # for secret in ["p","q","r","s"]:
+    # for secret in ["p","q",]:
+    # for secret in ["p","q","o"]:
+    for secret in ["t"]:
         upload_once(5,secret)
