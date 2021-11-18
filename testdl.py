@@ -98,7 +98,7 @@ def download_one_vid(id,ss,to):
             ydl.download([id])
         except youtube_dl.utils.DownloadError as err:
             #print('ERRROR!!!!!!')
-            traceback.print_exc()
+            print("\n\n\n\n\nLOOOOL THIS IS NOT DEBUGGdddddING")
         except:
             print("\n\n\n\n\nLOOOOL THIS IS NOT DEBUGGING")
 
@@ -108,7 +108,7 @@ def main():
     cached_dict = defaultdict(lambda: dict(), json.load(f))
     f.close()
     for id in (cached_dict):
-        if "tim" in cached_dict[id] and cached_dict[id]['pos']<=192:
+        if "tim" in cached_dict[id] and cached_dict[id]['pos']<=283:
         # if "tim" in cached_dict[id] and cached_dict[id]['pos']:
             for i in range(0,len(cached_dict[id]["tim"]),2):
                 ss=cached_dict[id]["tim"][i]

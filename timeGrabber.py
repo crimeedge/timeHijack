@@ -49,7 +49,7 @@ if __name__ == "__main__":
         if "tim" not in cached_dict[id]:
             cached_dict[id]["tim"]=["",""]
             # if nothing in the end time
-        if (cached_dict[id]["tim"][1]=="" or reset_cache) and cached_dict[id]["pos"]<=82:
+        if (cached_dict[id]["tim"][1]=="" or reset_cache) and cached_dict[id]["pos"]<=283:
         # if (cached_dict[id]["tim"][1]=="" or reset_cache) and cached_dict[id]["pos"]<=82:
             try:
                 comment = youtubeComments.get_one_comment(youtube,id,"Undesirable Truism")
