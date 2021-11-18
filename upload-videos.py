@@ -274,7 +274,7 @@ def upload_once(UPLOADSMAX = 5,secret="p"):
     dir = r'clean\videos'
     
     uploads = 0
-    for filename in os.listdir(dir):
+    for filename in sorted(os.listdir(dir)):
         if uploads >= UPLOADSMAX:
             break
         match_obj = upload_prog.match(filename)
@@ -313,7 +313,5 @@ def upload_once(UPLOADSMAX = 5,secret="p"):
                                 (e.resp.status, e.content))
 
 if __name__ == '__main__':
-    # for secret in ["p","q",]:
-    # for secret in ["t","q","p"]:
-    for secret in ["u"]:
+    for secret in ["t","q","p","o"]:
         upload_once(5,secret)

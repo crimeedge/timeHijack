@@ -86,6 +86,7 @@ def download_one_vid(id,ss,to):
         'external_downloader': 'ffmpeg' , 
         'sleep_interval': 1,
         'max_sleep_interval': 2,
+        'thread_queue_size': 16,
         'external_downloader_args': {
             'ffmpeg_i': ['-ss', ss, '-to', to],
         },
@@ -98,6 +99,8 @@ def download_one_vid(id,ss,to):
         except youtube_dl.utils.DownloadError as err:
             #print('ERRROR!!!!!!')
             traceback.print_exc()
+        except:
+            print("\n\n\n\n\nLOOOOL THIS IS NOT DEBUGGING")
 
 def main():
     filename = "dIAll.json"
@@ -105,7 +108,7 @@ def main():
     cached_dict = defaultdict(lambda: dict(), json.load(f))
     f.close()
     for id in (cached_dict):
-        if "tim" in cached_dict[id] and cached_dict[id]['pos']<=101:
+        if "tim" in cached_dict[id] and cached_dict[id]['pos']<=192:
         # if "tim" in cached_dict[id] and cached_dict[id]['pos']:
             for i in range(0,len(cached_dict[id]["tim"]),2):
                 ss=cached_dict[id]["tim"][i]
