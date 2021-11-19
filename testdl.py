@@ -86,9 +86,9 @@ def download_one_vid(id,ss,to):
         'external_downloader': 'ffmpeg' , 
         'sleep_interval': 1,
         'max_sleep_interval': 2,
-        'thread_queue_size': 16,
+        
         'external_downloader_args': {
-            'ffmpeg_i': ['-ss', ss, '-to', to],
+            'ffmpeg_i': ['-ss', ss, '-to', to, '-thread_queue_size', "1024"]
         },
         'progress_hooks':[my_hook]
     }
@@ -108,8 +108,8 @@ def main():
     cached_dict = defaultdict(lambda: dict(), json.load(f))
     f.close()
     for id in (cached_dict):
-        if "tim" in cached_dict[id] and cached_dict[id]['pos']<=283:
-        # if "tim" in cached_dict[id] and cached_dict[id]['pos']:
+        # if "tim" in cached_dict[id] and cached_dict[id]['pos']<=394:
+        if "tim" in cached_dict[id] and cached_dict[id]['pos']:
             for i in range(0,len(cached_dict[id]["tim"]),2):
                 ss=cached_dict[id]["tim"][i]
                 to=cached_dict[id]["tim"][i+1]

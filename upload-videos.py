@@ -313,5 +313,5 @@ def upload_once(UPLOADSMAX = 5,secret="p"):
                                 (e.resp.status, e.content))
 
 if __name__ == '__main__':
-    for secret in ["t","q","p","o"]:
+    for secret in ["p","o"]:
         upload_once(5,secret)
