@@ -274,7 +274,16 @@ def upload_once(UPLOADSMAX = 5,secret="p"):
     dir = r'clean\videos'
     
     uploads = 0
-    for filename in sorted(os.listdir(dir)):
+
+    list_of_files = filter( lambda x: os.path.isfile(os.path.join(dir, x)),
+                        os.listdir(dir) )
+    # Sort list of files based on last modification time in ascending order
+    list_of_files = sorted( list_of_files,
+                        key = lambda x: os.path.getmtime(os.path.join(dir, x))
+                        )
+
+
+    for filename in list_of_files:
         if uploads >= UPLOADSMAX:
             break
         match_obj = upload_prog.match(filename)
@@ -313,5 +322,5 @@ def upload_once(UPLOADSMAX = 5,secret="p"):
                                 (e.resp.status, e.content))
 
 if __name__ == '__main__':
-    for secret in ["p","o"]:
+    for secret in ["p","o","q"]: #rstu TaP policy locked
         upload_once(5,secret)

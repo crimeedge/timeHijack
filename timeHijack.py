@@ -5,7 +5,7 @@ import re
 import json
 from collections import defaultdict
 from driverMethods import create_driver
-from progs import video_id_prog, time_prog, comment_grabber_prog, comment_grabber_prog_weak
+from progs import video_id_prog, time_prog, comment_grabber_prog, comment_grabber_prog_weak, insta_id_prog
 #from youtube.youtubeComments import get_comment_time, get_time_from_comment
 import youtube.youtubeComments as youtubeComments
 from youtube.youtubeMake import get_api_service
@@ -28,15 +28,20 @@ class InputThread(threading.Thread):
             # self.last_user_input
 
 video_id = "INIT"
-
+site = "yt!"
 
 def check_diff_video_id(driver):
     # global driver
     global video_id
+    global site
     vee = video_id_prog.search(driver.current_url)
     # print("debug:"+vee)
     if vee:
         if not video_id == vee.group(1):
+            return True
+    vig = insta_id_prog.search(driver.current_url)
+    if vig:
+        if not video_id == vig.group(1):
             return True
     return False
 
@@ -51,22 +56,32 @@ def main():
     # login_to_youtube(driver)
     driver.get("https://www.youtube.com/channel/UCuQjQ-iqbHh-hIMrDwfYfYA/")
     global video_id
+    global site
     prev_last_inp = None
     inp_changed = False
     for _ in range(99999):
         # print("curr vid",video_id)
-        #store previous id
         
-
+        
+        # this is where the video id changes.   
         WebDriverWait(driver, 99999).until(check_diff_video_id)
 
-        # this is where the video id changes.
+        
+        #store previous id
         prev_id = video_id
 
         inp_changed = (prev_last_inp != it.last_user_input)
         prev_last_inp = it.last_user_input
 
-        video_id = video_id_prog.search(driver.current_url).group(1)
+        vee = video_id_prog.search(driver.current_url)
+        vig = insta_id_prog.search(driver.current_url)
+        if vee:
+            video_id = vee.group(1)
+            site = "yt!"
+        elif vig:
+            video_id = vig.group(1)
+            site = "ig!"
+        print(site)
         ms_pair = None
 
         filename = "dIAll.json"
@@ -74,18 +89,19 @@ def main():
         cached_dict = defaultdict(lambda: dict(), json.load(f))
         f.close()
         # cache
-        if video_id in cached_dict and "tim" in cached_dict[video_id] and len(cached_dict[video_id]["tim"]) > 0:
-            ms_pair = youtubeComments.get_time_from_comment(
-                cached_dict[video_id]["tim"][0])
+        if "yt!"==site:
+            if video_id in cached_dict and "tim" in cached_dict[video_id] and len(cached_dict[video_id]["tim"]) > 0:
+                ms_pair = youtubeComments.get_time_from_comment(
+                    cached_dict[video_id]["tim"][0])
 
-        #notcache
-        if not ms_pair:
-            try:
-                ms_pair = youtubeComments.get_comment_time(youtube, video_id)
-                print("nocache", ms_pair)
-            except HttpError as err:
-                print(err)
-                ms_pair = None
+            #notcache
+            if not ms_pair:
+                try:
+                    ms_pair = youtubeComments.get_comment_time(youtube, video_id)
+                    print("nocache", ms_pair)
+                except HttpError as err:
+                    print(err)
+                    ms_pair = None
         #check prev and update also # modularize??? prev_id and id and timegrabber...
 
         #safety checks - outdated
@@ -153,11 +169,12 @@ def main():
             pass
 
         #10 sec barrier
-        if ms_pair and (int(ms_pair[0]) > 0 or int(ms_pair[1]) > 10):
-            hijacked_link = re.sub(
-                time_prog, "", driver.current_url) + '&t=' + ms_pair[0] + 'm' + ms_pair[1] + 's'
-            print(hijacked_link)
-            driver.get(hijacked_link)
+        if "yt!"==site:
+            if ms_pair and (int(ms_pair[0]) > 0 or int(ms_pair[1]) > 10):
+                hijacked_link = re.sub(
+                    time_prog, "", driver.current_url) + '&t=' + ms_pair[0] + 'm' + ms_pair[1] + 's'
+                print(hijacked_link)
+                driver.get(hijacked_link)
 
 
 if __name__ == "__main__":
