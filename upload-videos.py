@@ -255,8 +255,9 @@ def re_playlist(youtube, downloaded):
                     outfile.write(json.dumps(downloaded, indent=4))
 
 
-def upload_once(UPLOADSMAX = 5,secret="p"):
-    youtube = get_authenticated_service(secret=secret)
+def upload_once(youtube=None,UPLOADSMAX = 5,secret="p"):
+    if not youtube:
+        youtube = get_authenticated_service(secret=secret)
 
     cached_dict = dict()
     filename = "dIAll.json"
@@ -322,5 +323,8 @@ def upload_once(UPLOADSMAX = 5,secret="p"):
                                 (e.resp.status, e.content))
 
 if __name__ == '__main__':
+    youtubes = []
     for secret in ["p","o","q"]: #rstu TaP policy locked
-        upload_once(5,secret)
+        youtubes.append(get_authenticated_service(secret=secret))
+    for youtube in youtubes:
+        upload_once(youtube)
