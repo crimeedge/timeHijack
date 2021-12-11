@@ -109,7 +109,7 @@ def main():
     f.close()
     for id in (cached_dict):
         # if "tim" in cached_dict[id] and cached_dict[id]['pos']<=394:
-        if "tim" in cached_dict[id] and cached_dict[id]['pos']:
+        if "tim" in cached_dict[id]:
             for i in range(0,len(cached_dict[id]["tim"]),2):
                 ss=cached_dict[id]["tim"][i]
                 to=cached_dict[id]["tim"][i+1]

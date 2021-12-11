@@ -16,12 +16,12 @@ def get_video_ids_and_pos(items):
     return video_ids
 
 def update_dict_playlists(cached_dict,items,playlistName):
-    print("udpate_dict",playlistName)
+    # print("udpate_dict",playlistName)
     for item in items:
         id = item['snippet']['resourceId']['videoId']
-        print("udatedict id",id)
+        # print("udatedict id",id)
         if id in cached_dict:
-            print("isid")
+            # print("isid")
             if "nam" not in cached_dict[id]:
                 cached_dict[id]["nam"]=dict()
             cached_dict[id]["nam"][playlistName]="" #make dictionary for this in json!
@@ -49,9 +49,10 @@ if __name__ == "__main__":
         if "tim" not in cached_dict[id]:
             cached_dict[id]["tim"]=["",""]
             # if nothing in the end time
-        if (cached_dict[id]["tim"][1]=="" or reset_cache) and cached_dict[id]["pos"]<=283:
+        if (cached_dict[id]["tim"][1]=="" or reset_cache):
         # if (cached_dict[id]["tim"][1]=="" or reset_cache) and cached_dict[id]["pos"]<=82:
             try:
+                print(id,cached_dict[id]["pos"],cached_dict[id]["cap"])
                 comment = youtubeComments.get_one_comment(youtube,id,"Undesirable Truism")
                 if comment:
                     for i,line in enumerate(comment.splitlines()):
@@ -75,7 +76,7 @@ if __name__ == "__main__":
                                 cached_dict[id]["tim"][2*i]=tim_weak.group(1)
                                 # print("tim_weak",tim_weak.group(1))
             except HttpError as err:
-                print(err)
+                # print(err)
                 pass
 
     playdict = dict()
